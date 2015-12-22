@@ -20,4 +20,4 @@ To run, install and then:
 python list_occurrences_since_last_deploy.py PROJECT_READ_ACCESS_TOKEN ENVIRONMENT_NAME
 ```
 
-
+If you just want to read the code, take a look at `list_occurrences_since_last_deploy.py` in this repo.
