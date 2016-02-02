@@ -1,0 +1,157 @@
+<html>
+  <head>
+    <title>Api Demo: Cross Project Item Listing</title>
+    <script src='scripts/ractive.js' type='text/javascript'></script>
+    <script src='scripts/jquery.js' type='text/javascript'></script>
+  </head>
+  <body>
+    <div id='app'></div>
+    <script id='app-template' type='text/ractive'>
+      <h1>Rollbar</h1>
+      <div>
+        {{^accountName}}
+          <div class='warning'>You cannot view Items without an account name entered</div>
+        {{/if}}
+        <label>Account Name (from the URL) <input type='text' value='{{accountName}}' placeholder='Account Name'></label>
+      </div>
+      <div>
+        {{#accountAccessToken.length !=32}}
+          <div class='warning'>Account Access Tokens are 32 characters long</div>
+        {{elseif projectError}}
+          <div class='error'>
+            Failed to Fetch Project Data.
+          </div>
+          <div class='error'>
+            {{projectError}}
+          </div>
+        {{/if}}
+        <label>Account Access Token <input type='text' value='{{accountAccessToken}}' placeholder='Account Access Token'></label>
+	<div class='info'>
+	  Find from <a target='_blank' {{#if accountName}}href='https://rollbar.com/settings/accounts/{{accountName}}/access_tokens/'{{/if}}>Your Account Access Token Page</a>
+	</div>
+      </div>
+      <div>
+        <ul>
+        {{#projects}}
+          <li><label>{{name}} <input type='checkbox' checked='{{.showProject}}'/></label></li>
+        {{/projects}}
+        </ul>
+      </div>
+      <div>
+        <label>Search Query <input type='text' value='{{query}}' placeholder='Search query'/></label>
+      </div>
+      <div>
+        {{#projects}}
+        {{#showProject}}
+        <h2>{{name}}</h2>
+        {{#if loading}}
+        <div>Loading</div>
+        {{else}}
+        <ul>
+        {{#items}}
+          <li><button on-click="openWindow(accountName, projects, .)">{{id}}: {{title}}</button></li>
+        {{/}}
+        </ul>
+        {{/if}}
+        {{/showProject}}
+        {{/projecs}}
+      </div>
+    </script>
+    <script>
+      var endpoint = "https://api.rollbar.com/api/1/";
+      window.ractive = new Ractive({ el: '#app',
+        template: '#app-template',
+        data: {
+          accountName: "",
+          accountAccessToken: "",
+          query: "",
+          projects: [],
+        },
+        oninit: function() {
+          var self = this;
+
+          this.observe('accountAccessToken', function(newVal, oldVal, keypath) {
+            if (newVal && newVal.length == 32) {
+              this.fetchProjects(newVal);
+            }
+          });
+
+          this.observe('projects', function(newVal, oldVal, keypath) {
+            var accessToken = this.get('accountAccessToken');
+            newVal.forEach(function(project) {
+              self.fetchAccessToken(project, accessToken);
+            });
+          });
+
+          this.observe('projects.*.showProject', function(newVal, oldVal, keypath) {
+            if (newVal) {
+              var project = this.get(keypath.replace(/\.showProject$/, ''));
+              if (!project.items && !project.loading) {
+                this.fetchItems(project);
+              }
+            }
+          });
+        },
+        fetchProjects: function(token) {
+          var self = this;
+          $.getJSON(endpoint + 'projects?access_token=' + token)
+            .then(function(results) {
+              self.set({
+                projects: results.result,
+                projectError: null,
+              });
+            })
+            .fail(function(results) {
+              self.set({
+                projects: [],
+                projectError: results,
+              })
+            });
+        },
+        fetchAccessToken: function(project, token) {
+          if (project.accessToken) {
+            return;
+          }
+          var self = this;
+          $.getJSON(endpoint + 'project/' + project.id + '/access_tokens?access_token=' + token)
+            .then(function (results) {
+              var token = results.result.find(function(x) {
+                return x.name == 'read';
+              });
+              project.accessToken = token && token.access_token;
+              self.update();
+            });
+        },
+        fetchItems: function(project, query) {
+          var self = this,
+            url = endpoint + "items/?access_token=" + project.accessToken;
+          project.loading = true;
+          if (query) {
+            url = url + '&query=' + encodeURIComponent(query)
+          }
+          $.getJSON()
+            .then(function(results) {
+              project.items = results.result.items;
+              project.loading = false;
+              self.update();
+            });
+          self.update();
+        },
+        getProjectName: function(projects, item) {
+          var p = projects.find(function(p) {
+            return p.id == item.project_id;
+          });
+          return p.name;
+        },
+        openWindow: function(accountName, projects, item) {
+          var projectName = this.getProjectName(projects, item),
+            url = "https://rollbar.com/"
+              + accountName + "/"
+              + projectName + "/items/"
+              + item.counter;
+          window.open(url, "_blank");
+        }
+      });
+    </script>
+  </body>
+</html>
