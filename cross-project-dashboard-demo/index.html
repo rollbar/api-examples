@@ -129,7 +129,7 @@
           if (query) {
             url = url + '&query=' + encodeURIComponent(query)
           }
-          $.getJSON()
+          $.getJSON(url)
             .then(function(results) {
               project.items = results.result.items;
               project.loading = false;
