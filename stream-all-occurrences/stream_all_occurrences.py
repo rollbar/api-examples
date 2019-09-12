@@ -11,40 +11,32 @@ import requests
 
 
 def handle_occurrence(occ):
+    """
+    Handles a single occurrence. Put your logic here to e.g. export to another system
+    """
+    # Occurrences have the payload format described at https://docs.rollbar.com/reference#items
     simple_title = get_simple_title(occ['data']['body'])
-    print(occ['id'], time.ctime(occ['timestamp']), simple_title)
+    context = occ['data'].get('context')
+    url = (occ['data'].get('request') or {}).get('url')
+    framework = occ['data'].get('framework')
+    platform = occ['data'].get('platform')
+    level = occ['data'].get('level')
 
-
-def get_simple_title(body):
-    try:
-        if 'trace_chain' in body and len(body['trace_chain']) > 0:
-            return make_simple_title(body['trace_chain'][0]['exception'])
-        elif 'trace' in body:
-            return make_simple_title(body['trace']['exception'])
-        else:
-            return body['message']['body']
-    except Exception as e:
-        print("Error making title:", e)
-        return "(unknown)"
-
-
-def make_simple_title(exception):
-    try:
-        return "{}: {}".format(exception['class'], exception['message'])
-    except KeyError:
-        return repr(exception)
-
-
-def init_min_id(project_read_token):
-    """
-    Init min id to the current max id.
-    """
-    for occ in fetch_occurrences(project_read_token):
-        return occ['id']
-    return 0
+    print(occ['id'], time.ctime(occ['timestamp']), simple_title, level, framework, platform, context, url)
 
 
 def stream_all_occurrences(project_read_token, min_id=None):
+    """
+    "Streams" all occurrences from the project with read token `project_read_token`
+
+    For each occurrence, calls `handle_occurrence`
+
+    When the 'end' is reached, waits, and then starts again from the top to find new occurrences since the last run started.
+
+    project_read_token: a 'read' scope project access token
+    min_id: the id that denotes the "end". Set to 0 to go all the way to the oldest data in the system. When None, will be initialized
+            to the most recent occurrence (i.e. to stream only new data starting at the point when the script is first run)
+    """
     last_id = None  # 'max' id
     
     max_id = None
@@ -109,6 +101,42 @@ def fetch_occurrences(project_read_token, last_id=None, min_id=0):
                 pass
     else:
         raise Exception("Error loading data from Rollbar API: %r", result)
+
+
+## misc utils
+
+def get_simple_title(body):
+    """
+    Given a body, return a simple title (like the one displayed in the Rollbar UI)
+    """
+    try:
+        if 'trace_chain' in body and len(body['trace_chain']) > 0:
+            return make_simple_title(body['trace_chain'][0]['exception'])
+        elif 'trace' in body:
+            return make_simple_title(body['trace']['exception'])
+        else:
+            return body['message']['body']
+    except Exception as e:
+        print("Error making title:", e)
+        return "(unknown)"
+
+
+def make_simple_title(exception):
+    try:
+        return "{}: {}".format(exception['class'], exception['message'])
+    except KeyError:
+        return repr(exception)
+
+
+def init_min_id(project_read_token):
+    """
+    Init min id to the current max id.
+    """
+    for occ in fetch_occurrences(project_read_token):
+        return occ['id']
+    return 0
+
+
 
 
 if __name__ == '__main__':
