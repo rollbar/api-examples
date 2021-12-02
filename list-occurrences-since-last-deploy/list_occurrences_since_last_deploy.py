@@ -24,7 +24,7 @@ def fetch_last_deploy_timestamp(access_token, environment):
     page = 1
     while True:
         result = requests.get(
-            "https://api.rollbar.com/api/1/deploys?page=%s" % page,
+            "https://api.rollbar.com/api/1/deploys?page={}".format(page),
             headers={"X-Rollbar-Access-Token": access_token},
         )
         deploys = result.json()["result"]["deploys"]
@@ -46,7 +46,7 @@ def print_occurrences_since_timestamp(access_token, environment, min_timestamp):
     page = 1
     while True:
         result = requests.get(
-            "https://api.rollbar.com/api/1/instances/?page=%s" % page,
+            "https://api.rollbar.com/api/1/instances/?page={}".format(page),
             headers={"X-Rollbar-Access-Token": access_token},
         )
         occurrences = result.json()["result"]["instances"]

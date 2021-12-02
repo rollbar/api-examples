@@ -16,14 +16,14 @@ def start_job(query, access_token):
 
 
 def get_job(job_id, access_token):
-    url = "https://api.rollbar.com/api/1/rql/job/%d" % job_id
+    url = "https://api.rollbar.com/api/1/rql/job/{}".format(job_id)
 
     res = requests.get(url, headers={"X-Rollbar-Access-Token": access_token})
     return res.json(), res.status_code < 400
 
 
 def get_result(job_id, access_token, expand=False):
-    url = "https://api.rollbar.com/api/1/rql/job/%d/result" % job_id
+    url = "https://api.rollbar.com/api/1/rql/job/{}/result".format(job_id)
     if expand:
         url += "&expand=result"
 
