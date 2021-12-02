@@ -33,8 +33,8 @@ def fetch_last_deploy_timestamp(access_token, environment):
             return None
 
         for deploy in deploys:
-            if deploy['environment'] == environment:
-                return deploy['start_time']
+            if deploy["environment"] == environment:
+                return deploy["start_time"]
         page += 1
 
 
@@ -56,11 +56,11 @@ def print_occurrences_since_timestamp(access_token, environment, min_timestamp):
 
         for occurrence in occurrences:
             # filter by environment
-            if occurrence['data']['environment'] == environment:
+            if occurrence["data"]["environment"] == environment:
                 # now check timestamp
-                if occurrence['timestamp'] >= min_timestamp:
-                    print occurrence['data']
-                elif occurrence['timestamp'] < min_timestamp - SEARCH_BUFFER_SECONDS:
+                if occurrence["timestamp"] >= min_timestamp:
+                    print(occurrence["data"])
+                elif occurrence["timestamp"] < min_timestamp - SEARCH_BUFFER_SECONDS:
                     # we've found an occurrence older than the min timestamp minus the buffer.
                     # done searching.
                     return
@@ -73,11 +73,13 @@ def main(access_token, environment):
     print_occurrences_since_timestamp(access_token, environment, last_deploy_timestamp)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Usage: python list_occurrences_since_last_deploy.py <project read access token> <environment name>")
+        print(
+            "Usage: python list_occurrences_since_last_deploy.py <project read access token> <environment name>"
+        )
         sys.exit(1)
-    
+
     access_token = sys.argv[1]
     environment = sys.argv[2]
 
