@@ -94,47 +94,65 @@
         },
         fetchProjects: function(token) {
           var self = this;
-          $.getJSON(endpoint + 'projects?access_token=' + token)
-            .then(function(results) {
+          $.ajax({
+            beforeSend: function(request) {
+              request.setRequestHeader('X-Rollbar-Access-Token', token);
+            },
+            url: endpoint + 'projects',
+            dataType: 'json',
+            success: function(results) {
               self.set({
                 projects: results.result,
                 projectError: null,
               });
-            })
-            .fail(function(results) {
+            },
+            error: function(results) {
               self.set({
                 projects: [],
                 projectError: results,
-              })
-            });
+              });
+            },
+          });
         },
         fetchAccessToken: function(project, token) {
           if (project.accessToken) {
             return;
           }
           var self = this;
-          $.getJSON(endpoint + 'project/' + project.id + '/access_tokens?access_token=' + token)
-            .then(function (results) {
+          $.ajax({
+            beforeSend: function(request) {
+              request.setRequestHeader('X-Rollbar-Access-Token', token);
+            },
+            url: endpoint + 'project/' + project.id + '/access_tokens',
+            dataType: 'json',
+            success: function (results) {
               var token = results.result.find(function(x) {
                 return x.name == 'read';
               });
               project.accessToken = token && token.access_token;
               self.update();
-            });
+            },
+          });
         },
         fetchItems: function(project, query) {
-          var self = this,
-            url = endpoint + "items/?access_token=" + project.accessToken;
+          var self = this;
+          var url = endpoint + "items";
           project.loading = true;
           if (query) {
-            url = url + '&query=' + encodeURIComponent(query)
+            url = url + '?query=' + encodeURIComponent(query)
           }
-          $.getJSON(url)
-            .then(function(results) {
+          $.ajax({
+            beforeSend: function(request) {
+              request.setRequestHeader('X-Rollbar-Access-Token', project.accessToken);
+            },
+            url: url,
+            dataType: 'json',
+            success: function(results) {
               project.items = results.result.items;
               project.loading = false;
               self.update();
-            });
+            },
+          });
           self.update();
         },
         getProjectName: function(projects, item) {

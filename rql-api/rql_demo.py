@@ -5,25 +5,26 @@ import time, requests
 def start_job(query, access_token):
     url = "https://api.rollbar.com/api/1/rql/jobs"
     data = {
-        'query_string': query,
-        'access_token': access_token,
+        "query_string": query,
     }
 
-    res = requests.post(url, json=data)
+    res = requests.post(
+        url, headers={"X-Rollbar-Access-Token": access_token}, json=data
+    )
     return res.json(), res.status_code < 400
 
 def get_job(job_id, access_token):
-    url = "https://api.rollbar.com/api/1/rql/job/%d?access_token=%s" % (job_id, access_token)
+    url = "https://api.rollbar.com/api/1/rql/job/%d" % job_id
 
-    res = requests.get(url)
+    res = requests.get(url, headers={"X-Rollbar-Access-Token": access_token})
     return res.json(), res.status_code < 400
 
 def get_result(job_id, access_token, expand=False):
-    url = "https://api.rollbar.com/api/1/rql/job/%d/result?access_token=%s" % (job_id, access_token)
+    url = "https://api.rollbar.com/api/1/rql/job/%d/result" % job_id
     if expand:
         url += "&expand=result"
 
-    res = requests.get(url)
+    res = requests.get(url, headers={"X-Rollbar-Access-Token": access_token})
     return res.json(), res.status_code < 400
 
 def run_query(query, access_token):

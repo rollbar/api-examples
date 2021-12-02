@@ -86,11 +86,12 @@ def fetch_occurrences(project_read_token, last_id=None, min_id=0):
     last_id: the high id to start from
     min_id: the low id to not go beyond (not go lower than)
     """
-    url = 'https://api.rollbar.com/api/1/instances?access_token={}'.format(project_read_token)
+    url = "https://api.rollbar.com/api/1/instances"
     if last_id is not None:
-        url += '&lastId={}'.format(last_id)
+        url += "?lastId={}".format(last_id)
 
-    resp = requests.get(url)
+    resp = requests.get(url, headers={'X-Rollbar-Access-Token':
+                                      project_read_token})
     result = resp.json()
     if result['err'] == 0:
         for elem in result['result']['instances']:
