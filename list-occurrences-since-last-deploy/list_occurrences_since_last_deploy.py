@@ -2,6 +2,8 @@
 Example showing how to use the Rollbar API to list all occurrences since the last deploy
 """
 
+from __future__ import print_function
+
 import sys
 import requests
 
@@ -73,7 +75,7 @@ def main(access_token, environment):
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        print "Usage: python list_occurrences_since_last_deploy.py <project read access token> <environment name>"
+        print("Usage: python list_occurrences_since_last_deploy.py <project read access token> <environment name>")
         sys.exit(1)
     
     access_token = sys.argv[1]
