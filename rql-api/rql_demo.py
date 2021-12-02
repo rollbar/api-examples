@@ -1,6 +1,6 @@
 # coding: utf-8
 
-import time, requests
+import json, time, requests
 
 def start_job(query, access_token):
     url = "https://api.rollbar.com/api/1/rql/jobs"
