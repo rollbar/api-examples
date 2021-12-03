@@ -4,7 +4,7 @@ If you just want to read the code, take a look at `list_occurrences_since_last_d
 
 To install and run, you will need:
 
-- Python 2.7.x
+- Python 2.7 or Python 3
 - pip
 - A Rollbar project read access token
 
